@@ -18,8 +18,8 @@ namespace rocksdb{
   size_t        logical_sector_size_;
   std::uint64_t uuididx;
 
-  HDFS*  env_zns;
-  HDFSFILE* znsfile;
+  HDFS*  env;
+  HDFSFILE* file;
 
 // #if ZNS_PREFETCH
 //   char*            prefetch;
@@ -29,31 +29,20 @@ namespace rocksdb{
 // #endif
 
  public:
-  HDFSRandomAccessFile(const std::string& fname, HDFS* zns,
+  HDFSRandomAccessFile(const std::string& fname, HDFS* e,
                       const EnvOptions& options)
       : filename_(fname),
         use_direct_io_(options.use_direct_reads),
         logical_sector_size_(ZNS_ALIGMENT),
         uuididx(0),
-        env_zns(zns) {
-// #if ZNS_PREFETCH
-//     prefetch_off = 0;
-// #endif
-//     // env_zns->filesMutex.Lock();
-//     znsfile = env_zns->files[filename_];
-//     // env_zns->filesMutex.Unlock();
+        env(e) {
+    env->filesMutex.Lock();
+    file = env->files[filename_];
+    env->filesMutex.Unlock();
+  }
 
-// #if ZNS_PREFETCH
-//     prefetch = reinterpret_cast<char*>(zrocks_alloc(ZNS_PREFETCH_BUF_SZ));
-//     if (!prefetch) {
-//       std::cout << " ZRocks (alloc prefetch) error." << std::endl;
-//       prefetch = nullptr;
-//     }
-//     prefetch_sz = 0;
-// #endif
-//   }
-
-//   virtual ~HDFSRandomAccessFile() {
+  virtual ~HDFSRandomAccessFile() {
+    cout<<"Closing RandomAccess\n";
 // #if ZNS_PREFETCH
 //     zrocks_free(prefetch);
 // #endif

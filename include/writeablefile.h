@@ -18,21 +18,12 @@ namespace rocksdb{
   const bool        use_direct_io_;
   int               fd_;
   std::uint64_t     filesize_;
-  HDFSFILE*          znsfile;
+  HDFSFILE*          file;
   size_t            logical_sector_size_;
-#ifdef ROCKSDB_FALLOCATE_PRESENT
-  bool allow_fallocate_;
-  bool fallocate_with_keep_size_;
-#endif
-
-  char* wcache;
-  char* cache_off;
-
-  HDFS*       env_zns;
-  std::uint64_t map_off;
+  HDFS*       env;
 
  public:
-  explicit HDFSWritableFile(const std::string& fname, HDFS* zns,
+  explicit HDFSWritableFile(const std::string& fname, HDFS* e,
                            const EnvOptions& options)
       : WritableFile(options),
         filename_(fname),
@@ -40,29 +31,14 @@ namespace rocksdb{
         fd_(0),
         filesize_(0),
         logical_sector_size_(ZNS_ALIGMENT),
-        env_zns(zns) {
-// #ifdef ROCKSDB_FALLOCATE_PRESENT
-//     allow_fallocate_          = options.allow_fallocate;
-//     fallocate_with_keep_size_ = options.fallocate_with_keep_size;
-// #endif
-
-//     wcache = reinterpret_cast<char*>(zrocks_alloc(ZNS_MAX_BUF));
-//     if (!wcache) {
-//       std::cout << " ZRocks (alloc) error." << std::endl;
-//       cache_off = nullptr;
-//     }
-
-//     cache_off = wcache;
-//     map_off   = 0;
-
-    // zns->filesMutex.Lock();
-    // znsfile = env_zns->files[fname];
-    // zns->filesMutex.Unlock();
+        env(e) {
+    env->filesMutex.Lock();
+    file = env->files[fname];
+    env->filesMutex.Unlock();
   }
 
   virtual ~HDFSWritableFile() {
-    // if (wcache)
-    //   zrocks_free(wcache);
+    
   }
 
   /* ### Implemented at env_zns_io.cc ### */

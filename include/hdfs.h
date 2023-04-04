@@ -11,6 +11,12 @@
 #include <rocksdb/env.h>
 #include<hdfsfile.h>
 #include<libzrocks.h>
+#include<port/port_posix.h>
+#include<pthread.h>
+#include <signal.h>
+#include <unistd.h>
+
+
 using namespace std;
 
 #define DEBUG       0
@@ -21,20 +27,33 @@ using namespace std;
 #define HDFS_META_SWITCH 1                /* MetaData Switch 0:Close   1:Open */
 #define HDFS_MAX_NODE_NUM 6000
 
-
 namespace rocksdb
 {
   class HDFS : public Env {
     private:
       Env* target;
-
+      pthread_t flushThread;
+      bool isFlushRunning;
+      string dev_name;
     public:
-      std::map<string,HDFSFILE*>files;
-      uint64_t sequence;
-      uint64_t read_bytes[HDFS_MAX_NODE_NUM];
-      bool alloc_flag[HDFS_MAX_NODE_NUM];
+      port::Mutex filesMutex,envStartMutex,metaMutex;
+
+      std::map<string,HDFSFILE*>  files;
+      uint64_t                    sequence;
+      uint64_t                    read_bytes[HDFS_MAX_NODE_NUM];
+      bool                        alloc_flag[HDFS_MAX_NODE_NUM];
+      std::uint64_t               uuididx;
+      bool                        isEnvStart;
+      unsigned char*              metaBuf;
+
       HDFS(){
         target=Env::Default();
+        isFlushRunning         = false;
+        isEnvStart            = false;
+        uuididx               = 0;
+        flushThread           = 0;
+        sequence              = 0;
+        metaBuf               = NULL;
       }
       ~HDFS() override{}
       const char* Name() const override { return target->Name(); }
@@ -108,6 +127,9 @@ namespace rocksdb
       void SanitizeEnvOptions(EnvOptions* env_opts) const override ;
       Status PrepareOptions(const ConfigOptions& options) override;
       bool IsFilePosix(const std::string& fname);
+
+
+      
   };
 }
 

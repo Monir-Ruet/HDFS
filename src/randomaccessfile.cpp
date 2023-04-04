@@ -3,7 +3,7 @@
 using namespace rocksdb;
 
 Status HDFSRandomAccessFile::Read(std::uint64_t offset, size_t n, Slice *result,char *scratch) const{
-
+    cout<<result->ToString()<<'\n';
 }
 
 Status HDFSRandomAccessFile::Prefetch(std::uint64_t offset, size_t n){

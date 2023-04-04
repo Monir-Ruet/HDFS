@@ -1,11 +1,11 @@
 BINARY=main
 CODEDIRS=. src
-INCDIRS=. ./include/ # can be list
+INCDIRS=. ./include/ /home/monir/rocksdb /home/monir/rocksdb/include/ # can be list
 
 CC=g++
 OPT=-O0
 # DEPFLAGS=-MP -MD
-CFLAGS= -Wall -g $(foreach D,$(INCDIRS),-I$(D)) $(OPT) -lrocksdb
+CFLAGS= -Wall  -g $(foreach D,$(INCDIRS),-I$(D)) $(OPT) -lrocksdb
 
 CFILES=$(foreach D,$(CODEDIRS),$(wildcard $(D)/*.cpp))
 # regular expression replacement

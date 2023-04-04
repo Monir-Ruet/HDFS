@@ -15,11 +15,12 @@ namespace rocksdb
     class HDFSFILE
     {
     public:
-        std::string name;
-        size_t size;
-        size_t before_truncate_size;
-        std::uint64_t uuididx;
-        int level;
+        std::string         name;
+        std::string         data;
+        size_t              size;
+        size_t              before_truncate_size;
+        std::uint64_t       uuididx;
+        int                 level;
         // std::vector<struct zrocks_map> map;
         std::uint32_t startIndex;
 

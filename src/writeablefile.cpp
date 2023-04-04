@@ -3,6 +3,7 @@
 using namespace rocksdb;
 
 Status HDFSWritableFile::Append(const Slice &data){
+    
     return Status::OK();
 }
 

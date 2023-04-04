@@ -1,24 +1,46 @@
 #include <hdfs.h>
+#include<randomaccessfile.h>
+#include<sequentialfile.h>
+#include<writeablefile.h>
 using namespace rocksdb;
 
 Status HDFS::NewSequentialFile(const std::string &f, std::unique_ptr<SequentialFile> *r, const EnvOptions &options){
-  if(IsFilePosix(f))
+  if(IsFilePosix(f) || files[f]==NULL)
     return target->NewSequentialFile(f, r, options);
-  else{
-    cout<<__func__<<" "<<f<<'\n';
-    return Status::OK();
-  }
+  HDFSSequentialFile *fd=new HDFSSequentialFile(f,this,options);
+  r->reset(dynamic_cast<HDFSSequentialFile*>(fd));
+  return Status::OK();
 }
 Status HDFS::NewRandomAccessFile(const std::string &f, std::unique_ptr<RandomAccessFile> *r, const EnvOptions &options){
+  cout<<__func__<<" "<<f<<'\n';
   if(IsFilePosix(f))
     return target->NewRandomAccessFile(f, r, options);
-  else{
-    cout<<__func__<<" "<<f<<'\n';
-    return Status::OK();
-  }
+  HDFSRandomAccessFile *fd=new HDFSRandomAccessFile(f,this,options);
+  r->reset(dynamic_cast<HDFSRandomAccessFile*>(fd));
+  return Status::OK();
 }
 Status HDFS::NewWritableFile(const std::string &f, std::unique_ptr<WritableFile> *r, const EnvOptions &options){
-  return target->NewWritableFile(f, r, options);
+  if(IsFilePosix(f))
+    return target->NewWritableFile(f,r,options);
+  else
+  target->NewWritableFile(f,r,options);
+
+  cout<<__func__<<" "<<f<<"\n";
+  filesMutex.Lock();
+  int filenum=files.count(f);
+  filesMutex.Unlock();
+  if(filenum!=0){
+    delete files[f];
+    files.erase(f);
+  }
+
+  filesMutex.Lock();
+  files[f]=new HDFSFILE(f,-1);
+  files[f]->uuididx=uuididx++;
+  filesMutex.Unlock();
+  HDFSWritableFile* fd=new HDFSWritableFile(f,this,options);
+  r->reset(dynamic_cast<HDFSWritableFile*>(fd));
+  return Status::OK();
 }
 Status HDFS::ReopenWritableFile(const std::string &fname, std::unique_ptr<WritableFile> *result, const EnvOptions &options){
   return target->ReopenWritableFile(fname, result, options);
